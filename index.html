@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VKS // Terminal Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100;0,400;0,700;0,800;1,400&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --green:#00ff41;
+      --green-dim:#00b32d;
+      --green-dark:#003b0c;
+      --bg:#020d02;
+      --bg2:#051205;
+      --amber:#ffb000;
+      --red:#ff3131;
+      --text:#b8ffcc;
+      --muted:#3a6b41;
+      --font:'JetBrains Mono',monospace;
+      --display:'Bebas Neue',monospace;
+    }
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);overflow-x:hidden;cursor:none}
+
+    /* Scanlines */
+    body::before{
+      content:'';position:fixed;inset:0;
+      background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,65,0.015) 2px,rgba(0,255,65,0.015) 4px);
+      pointer-events:none;z-index:9999
+    }
+    /* CRT vignette */
+    body::after{
+      content:'';position:fixed;inset:0;
+      background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,0.7) 100%);
+      pointer-events:none;z-index:9998
+    }
+
+    .cursor{position:fixed;width:10px;height:18px;background:var(--green);pointer-events:none;z-index:10000;animation:blink .7s step-end infinite;mix-blend-mode:screen}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+    /* NAV */
+    nav{
+      position:fixed;top:0;left:0;right:0;z-index:100;
+      background:rgba(2,13,2,0.95);border-bottom:1px solid var(--green-dim);
+      padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;
+      backdrop-filter:blur(4px)
+    }
+    .nav-logo{font-size:.85rem;color:var(--green);letter-spacing:.1em}
+    .nav-logo span{color:var(--muted)}
+    .nav-links{display:flex;gap:1.5rem;list-style:none}
+    .nav-links a{font-size:.72rem;color:var(--muted);text-decoration:none;letter-spacing:.12em;transition:color .2s}
+    .nav-links a::before{content:'./';color:var(--green-dim)}
+    .nav-links a:hover{color:var(--green)}
+
+    /* HERO */
+    .hero{
+      min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+      padding:6rem 2rem 3rem;max-width:900px;margin:0 auto;
+    }
+    .hero-prompt{font-size:.78rem;color:var(--muted);margin-bottom:.5rem;opacity:0;animation:fadeIn .5s ease forwards .2s}
+    .hero-prompt::before{content:'root@vks:~$ ';color:var(--green)}
+
+    .hero-name{
+      font-family:var(--display);font-size:clamp(4rem,12vw,10rem);
+      color:var(--green);line-height:.9;letter-spacing:.02em;
+      text-shadow:0 0 40px rgba(0,255,65,0.4),0 0 80px rgba(0,255,65,0.2);
+      opacity:0;animation:glitchIn .8s ease forwards .5s
+    }
+    @keyframes glitchIn{
+      0%{opacity:0;transform:skewX(-10deg) translateX(-20px);filter:blur(10px)}
+      60%{opacity:1;transform:skewX(2deg) translateX(4px);filter:blur(0)}
+      80%{transform:skewX(-1deg) translateX(-2px)}
+      100%{opacity:1;transform:none;filter:none}
+    }
+
+    .hero-title{
+      font-size:.9rem;color:var(--green-dim);letter-spacing:.2em;
+      margin:.5rem 0 2rem;text-transform:uppercase;
+      opacity:0;animation:fadeIn .5s ease forwards .9s
+    }
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+    .terminal-box{
+      background:var(--bg2);border:1px solid var(--green-dim);border-radius:4px;
+      padding:1.5rem;margin-bottom:2rem;position:relative;
+      opacity:0;animation:fadeIn .5s ease forwards 1.1s
+    }
+    .terminal-box::before{
+      content:'● ● ●';position:absolute;top:.6rem;left:1rem;
+      font-size:.6rem;letter-spacing:.4rem;color:var(--muted)
+    }
+    .terminal-line{font-size:.8rem;color:var(--text);line-height:2;margin-top:.5rem}
+    .terminal-line .key{color:var(--green);min-width:120px;display:inline-block}
+    .terminal-line .val{color:var(--amber)}
+    .terminal-line .arr{color:var(--muted)}
+
+    .hero-cta{
+      display:flex;gap:1rem;flex-wrap:wrap;
+      opacity:0;animation:fadeIn .5s ease forwards 1.4s
+    }
+    .btn{
+      font-family:var(--font);font-size:.75rem;padding:.7rem 1.5rem;
+      text-decoration:none;letter-spacing:.1em;transition:all .2s;
+      display:inline-flex;align-items:center;gap:.5rem;cursor:none;
+      border-radius:2px;
+    }
+    .btn-primary{background:var(--green);color:#000;font-weight:700;border:none}
+    .btn-primary:hover{background:#fff;box-shadow:0 0 20px rgba(0,255,65,.6)}
+    .btn-ghost{border:1px solid var(--green-dim);color:var(--green-dim);background:transparent}
+    .btn-ghost:hover{border-color:var(--green);color:var(--green);box-shadow:0 0 10px rgba(0,255,65,.2)}
+    .btn-wa{border:1px solid #25d366;color:#25d366;background:transparent}
+    .btn-wa:hover{background:rgba(37,211,102,.1);box-shadow:0 0 10px rgba(37,211,102,.3)}
+
+    /* SECTION */
+    section{max-width:900px;margin:0 auto;padding:5rem 2rem}
+    .sec-header{margin-bottom:2rem}
+    .sec-label{font-size:.7rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.3rem}
+    .sec-label::before{content:'# ';color:var(--green)}
+    .sec-title{font-family:var(--display);font-size:clamp(2.5rem,5vw,4rem);color:var(--green);line-height:1;letter-spacing:.05em}
+
+    hr{border:none;border-top:1px solid var(--green-dark);margin:0}
+
+    /* SKILLS */
+    .skills-table{width:100%;border-collapse:collapse;font-size:.8rem}
+    .skills-table tr{border-bottom:1px solid var(--green-dark)}
+    .skills-table tr:hover{background:var(--bg2)}
+    .skills-table td{padding:.8rem .5rem;vertical-align:middle}
+    .skills-table .col-id{color:var(--muted);width:40px}
+    .skills-table .col-name{color:var(--green);font-weight:700;width:200px}
+    .skills-table .col-level{width:120px}
+    .bar{height:6px;background:var(--green-dark);border-radius:1px;overflow:hidden}
+    .bar-fill{height:100%;background:var(--green);border-radius:1px;box-shadow:0 0 6px var(--green)}
+    .skills-table .col-tags{color:var(--amber)}
+
+    /* EXPERIENCE */
+    .exp-item{border:1px solid var(--green-dark);padding:1.5rem;margin-bottom:1px;position:relative;transition:border-color .2s}
+    .exp-item:hover{border-color:var(--green-dim)}
+    .exp-meta{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem}
+    .exp-role{font-size:1rem;font-weight:700;color:var(--green)}
+    .exp-company{font-size:.75rem;color:var(--amber);margin-top:.2rem}
+    .exp-period{font-size:.7rem;color:var(--muted);letter-spacing:.08em}
+    .exp-points{list-style:none;display:flex;flex-direction:column;gap:.4rem}
+    .exp-points li{font-size:.78rem;color:var(--text);padding-left:1.5rem;position:relative;line-height:1.6}
+    .exp-points li::before{content:'>';position:absolute;left:0;color:var(--green)}
+
+    /* ACHIEVEMENTS */
+    .ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;background:var(--green-dark)}
+    .ach-card{background:var(--bg2);padding:1.5rem;transition:background .2s}
+    .ach-card:hover{background:var(--bg)}
+    .ach-num{font-size:.65rem;color:var(--muted);letter-spacing:.15em;margin-bottom:.75rem}
+    .ach-title{font-size:.9rem;font-weight:700;color:var(--green);margin-bottom:.5rem}
+    .ach-desc{font-size:.75rem;color:var(--text);line-height:1.7}
+
+    /* RESUME */
+    .resume-box{
+      background:var(--bg2);border:1px solid var(--amber);padding:2rem;
+      display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem
+    }
+    .resume-info{font-size:.8rem;color:var(--text)}
+    .resume-info .title{font-size:1.1rem;color:var(--amber);font-weight:700;margin-bottom:.3rem}
+    .resume-info .sub{color:var(--muted)}
+
+    /* CONTACT */
+    .contact-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1px;background:var(--green-dark)}
+    .contact-card{
+      background:var(--bg2);padding:1.5rem;
+      display:flex;align-items:center;gap:1rem;
+      text-decoration:none;color:var(--text);transition:background .2s
+    }
+    .contact-card:hover{background:rgba(0,255,65,.05)}
+    .contact-icon{font-size:1.3rem;width:40px;text-align:center}
+    .contact-label{font-size:.85rem;font-weight:700;color:var(--green)}
+    .contact-val{font-size:.72rem;color:var(--muted);margin-top:.2rem}
+
+    footer{text-align:center;padding:1.5rem;border-top:1px solid var(--green-dark);font-size:.7rem;color:var(--muted)}
+
+    .reveal{opacity:0;transform:translateY(20px);transition:opacity .5s,transform .5s}
+    .reveal.visible{opacity:1;transform:none}
+
+    @media(max-width:768px){
+      nav{padding:.75rem 1rem}
+      .nav-links{display:none}
+      section{padding:3rem 1rem}
+      .hero{padding:5rem 1rem 2rem}
+      .resume-box{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+
+<nav>
+  <div class="nav-logo"><span>~/</span>vivek-kumar-singh</div>
+  <ul class="nav-links">
+    <li><a href="#skills">skills</a></li>
+    <li><a href="#experience">experience</a></li>
+    <li><a href="#achievements">projects</a></li>
+    <li><a href="#contact">contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <p class="hero-prompt">whoami && cat portfolio.txt</p>
+  <h1 class="hero-name">VIVEK<br>KUMAR<br>SINGH</h1>
+  <p class="hero-title">// Full Stack Developer · Team Lead · AWS Certified</p>
+
+  <div class="terminal-box">
+    <div class="terminal-line"><span class="key">name:</span><span class="arr"> → </span><span class="val">"Vivek Kumar Singh"</span></div>
+    <div class="terminal-line"><span class="key">role:</span><span class="arr"> → </span><span class="val">"Development Team Lead | Full Stack Dev"</span></div>
+    <div class="terminal-line"><span class="key">location:</span><span class="arr"> → </span><span class="val">"Gurugram, Haryana, India"</span></div>
+    <div class="terminal-line"><span class="key">experience:</span><span class="arr"> → </span><span class="val">5+ years</span></div>
+    <div class="terminal-line"><span class="key">team_size:</span><span class="arr"> → </span><span class="val">10 developers</span></div>
+    <div class="terminal-line"><span class="key">clients:</span><span class="arr"> → </span><span class="val">["Amazon","HDFC","Godrej","Mahindra","DAC"]</span></div>
+    <div class="terminal-line"><span class="key">status:</span><span class="arr"> → </span><span class="val">"🟢 open_to_opportunities"</span></div>
+  </div>
+
+  <div class="hero-cta">
+    <a href="#contact" class="btn btn-primary">$ contact --now</a>
+    <a href="https://wa.me/917903935375" target="_blank" class="btn btn-wa">📱 WhatsApp</a>
+    <a href="#resume" class="btn btn-ghost">⬇ download_resume()</a>
+    <a href="https://www.linkedin.com/in/vivekrajput95" target="_blank" class="btn btn-ghost">↗ linkedin</a>
+  </div>
+</div>
+
+<hr>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="sec-header reveal">
+    <p class="sec-label">technical stack</p>
+    <h2 class="sec-title">SKILLS.JSON</h2>
+  </div>
+  <table class="skills-table reveal">
+    <tr>
+      <td class="col-id">001</td>
+      <td class="col-name">Angular</td>
+      <td class="col-level"><div class="bar"><div class="bar-fill" style="width:95%"></div></div></td>
+      <td class="col-tags">TypeScript · RxJS · NgRx · v2-v17</td>
+    </tr>
+    <tr>
+      <td class="col-id">002</td>
+      <td class="col-name">AWS Cloud</td>
+      <td class="col-level"><div class="bar"><div class="bar-fill" style="width:85%"></div></div></td>
+      <td class="col-tags">EC2 · S3 · Lambda · CLI · Certified</td>
+    </tr>
+    <tr>
+      <td class="col-id">003</td>
+      <td class="col-name">CI/CD</td>
+      <td class="col-level"><div class="bar"><div class="bar-fill" style="width:80%"></div></div></td>
+      <td class="col-tags">GitHub Actions · Jenkins · Docker</td>
+    </tr>
+    <tr>
+      <td class="col-id">004</td>
+      <td class="col-name">HTML/CSS/JS</td>
+      <td class="col-level"><div class="bar"><div class="bar-fill" style="width:90%"></div></div></td>
+      <td class="col-tags">Responsive · Accessibility · Performance</td>
+    </tr>
+    <tr>
+      <td class="col-id">005</td>
+      <td class="col-name">Testing</td>
+      <td class="col-level"><div class="bar"><div class="bar-fill" style="width:80%"></div></div></td>
+      <td class="col-tags">Jasmine · Karma · TDD · Unit Tests</td>
+    </tr>
+    <tr>
+      <td class="col-id">006</td>
+      <td class="col-name">Leadership</td>
+      <td class="col-level"><div class="bar"><div class="bar-fill" style="width:88%"></div></div></td>
+      <td class="col-tags">Agile · Scrum · Mentoring · Code Review</td>
+    </tr>
+  </table>
+</section>
+
+<hr>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="sec-header reveal">
+    <p class="sec-label">work history</p>
+    <h2 class="sec-title">CAREER.LOG</h2>
+  </div>
+
+  <div class="exp-item reveal">
+    <div class="exp-meta">
+      <div>
+        <div class="exp-role">Development Team Lead</div>
+        <div class="exp-company">Dhwani Rural Information Systems</div>
+      </div>
+      <div class="exp-period">2022-07 → PRESENT</div>
+    </div>
+    <ul class="exp-points">
+      <li>Leading 10-person frontend engineering team across enterprise product lines</li>
+      <li>Led security implementation → earned VAPT Certificate for mGrant</li>
+      <li>Built reusable UI component library → reduced dev time significantly org-wide</li>
+      <li>Delivered projects for Amazon, HDFC, Godrej, Mahindra & DAC</li>
+    </ul>
+  </div>
+
+  <div class="exp-item reveal">
+    <div class="exp-meta">
+      <div>
+        <div class="exp-role">Frontend Developer</div>
+        <div class="exp-company">Dhwani Rural Information Systems</div>
+      </div>
+      <div class="exp-period">2020-07 → 2022-06</div>
+    </div>
+    <ul class="exp-points">
+      <li>Built responsive Angular applications for diverse client requirements</li>
+      <li>Spearheaded unit testing with Jasmine & Karma across the codebase</li>
+      <li>Championed clean, documented, scalable code through active reviews</li>
+    </ul>
+  </div>
+
+  <div class="exp-item reveal">
+    <div class="exp-meta">
+      <div>
+        <div class="exp-role">Software Developer</div>
+        <div class="exp-company">WOne Management System Pvt Ltd</div>
+      </div>
+      <div class="exp-period">2019-07 → 2020-05</div>
+    </div>
+    <ul class="exp-points">
+      <li>Developed and maintained web applications as core product team member</li>
+    </ul>
+  </div>
+</section>
+
+<hr>
+
+<!-- ACHIEVEMENTS -->
+<section id="achievements">
+  <div class="sec-header reveal">
+    <p class="sec-label">key projects</p>
+    <h2 class="sec-title">ACHIEVEMENTS.DB</h2>
+  </div>
+  <div class="ach-grid reveal">
+    <div class="ach-card">
+      <div class="ach-num">// 01</div>
+      <div class="ach-title">Reusable UI Component Library</div>
+      <div class="ach-desc">Engineered Angular component library → standardized design patterns, cut dev time across all projects</div>
+    </div>
+    <div class="ach-card">
+      <div class="ach-num">// 02</div>
+      <div class="ach-title">VAPT Certificate — mGrant</div>
+      <div class="ach-desc">Led security implementation that earned Vulnerability Assessment & Penetration Testing certification</div>
+    </div>
+    <div class="ach-card">
+      <div class="ach-num">// 03</div>
+      <div class="ach-title">4+ Enterprise Deliveries</div>
+      <div class="ach-desc">Shipped production web products for Amazon, HDFC, Godrej, Mahindra & DAC on time and on quality</div>
+    </div>
+    <div class="ach-card">
+      <div class="ach-num">// 04</div>
+      <div class="ach-title">Unit Testing Culture</div>
+      <div class="ach-desc">Introduced Jasmine & Karma testing across team → dramatically reduced production bug rate</div>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<!-- RESUME -->
+<section id="resume">
+  <div class="sec-header reveal">
+    <p class="sec-label">curriculum vitae</p>
+    <h2 class="sec-title">RESUME.PDF</h2>
+  </div>
+  <div class="resume-box reveal">
+    <div class="resume-info">
+      <div class="title">Vivek Kumar Singh — Full Stack Developer & Team Lead</div>
+      <div class="sub">MCA · AWS Certified Developer · 5+ Years Experience · Gurugram, India</div>
+    </div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap">
+      <a href="resume.pdf" download class="btn btn-primary">⬇ download_resume.pdf</a>
+      <a href="https://www.linkedin.com/in/vivekrajput95" target="_blank" class="btn btn-ghost">↗ view_on_linkedin</a>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="sec-header reveal">
+    <p class="sec-label">get in touch</p>
+    <h2 class="sec-title">CONTACT.SH</h2>
+  </div>
+  <div class="contact-grid reveal">
+    <a href="mailto:vsingh616@gmail.com" class="contact-card">
+      <span class="contact-icon">✉</span>
+      <div><div class="contact-label">Email</div><div class="contact-val">vsingh616@gmail.com</div></div>
+    </a>
+    <a href="https://wa.me/917903935375" target="_blank" class="contact-card">
+      <span class="contact-icon">📱</span>
+      <div><div class="contact-label">WhatsApp</div><div class="contact-val">+91 7903935375 · Chat directly</div></div>
+    </a>
+    <a href="https://www.linkedin.com/in/vivekrajput95" target="_blank" class="contact-card">
+      <span class="contact-icon">💼</span>
+      <div><div class="contact-label">LinkedIn</div><div class="contact-val">linkedin.com/in/vivekrajput95</div></div>
+    </a>
+    <a href="tel:+917903935375" class="contact-card">
+      <span class="contact-icon">📞</span>
+      <div><div class="contact-label">Phone</div><div class="contact-val">+91 7903935375</div></div>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <p>root@vks:~$ echo "© 2025 Vivek Kumar Singh" // Built for GitHub Pages</p>
+</footer>
+
+<script>
+  // cursor follow
+  const cur = document.getElementById('cursor');
+  document.addEventListener('mousemove',e=>{cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px'});
+
+  // scroll reveal
+  const obs = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')});
+  },{threshold:.1});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
